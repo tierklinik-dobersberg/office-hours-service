@@ -28,7 +28,7 @@ type DayTimeRange struct {
 type OfficeHourModel struct {
 	ID               primitive.ObjectID              `bson:"_id"`
 	DayOfWeek        time.Weekday                    `bson:"dayOfWeek,omitempty"`
-	Date             time.Time                       `bson:"date,omitempty"`
+	Date             string                          `bson:"date,omitempty"`
 	HolidayCondition office_hoursv1.HolidayCondition `bson:"holiday,omitempty"`
 	TimeRanges       []DayTimeRange                  `bson:"timeRanges"` // no omitempty!
 }
@@ -45,9 +45,20 @@ func (m OfficeHourModel) ToProto() *office_hoursv1.OfficeHour {
 			DayOfWeek: commonv1.FromWeekday(m.DayOfWeek),
 		}
 
-	case !m.Date.IsZero():
+	case m.Date != "":
+		date, err := commonv1.ParseDate(m.Date)
+		if err != nil {
+			t, err := time.Parse(m.Date, "01-02")
+			if err == nil {
+				date = &commonv1.Date{
+					Month: commonv1.FromMonth(t.Month()),
+					Day:   int32(t.Day()),
+				}
+			}
+		}
+
 		res.Kind = &office_hoursv1.OfficeHour_Date{
-			Date: commonv1.FromTime(m.Date),
+			Date: date,
 		}
 	}
 
@@ -89,7 +100,11 @@ func ModelFromProto(pb *office_hoursv1.OfficeHour) (*OfficeHourModel, error) {
 
 	switch v := pb.Kind.(type) {
 	case *office_hoursv1.OfficeHour_Date:
-		res.Date = v.Date.AsTime()
+		if v.Date.Year != 0 {
+			res.Date = v.Date.AsTime().Format("2006-01-02")
+		} else {
+			res.Date = v.Date.AsTime().Format("01-02")
+		}
 
 	case *office_hoursv1.OfficeHour_DayOfWeek:
 		res.DayOfWeek = v.DayOfWeek.ToWeekday()
