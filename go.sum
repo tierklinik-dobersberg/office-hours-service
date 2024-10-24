@@ -1,0 +1,4 @@
+github.com/sethvargo/go-envconfig v1.1.0 h1:cWZiJxeTm7AlCvzGXrEXaSTCNgip5oJepekh/BOQuog=
+github.com/sethvargo/go-envconfig v1.1.0/go.mod h1:JLd0KFWQYzyENqnEPWWZ49i4vzZo/6nRidxI8YvGiHw=
+github.com/tierklinik-dobersberg/apis v0.11.1-0.20241024081849-c18056ff6635 h1:T0qLiBAqMWcnxda0AEZWdOKKZU163q55yZKsIaAyrCc=
+github.com/tierklinik-dobersberg/apis v0.11.1-0.20241024081849-c18056ff6635/go.mod h1:/yv2lATICewRsgIVsYqzZm3Q19MeBaOh5tXFMuFpvzw=
