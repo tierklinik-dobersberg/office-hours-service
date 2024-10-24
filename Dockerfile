@@ -14,13 +14,13 @@ RUN go mod verify
 
 COPY ./ ./
 
-RUN CGO_ENABLED=0 go build -o /go/bin/pbtype-server ./cmds/pbtype-server
+RUN CGO_ENABLED=0 go build -o /go/bin/pbtype-server ./cmds/officehour-service
 
 FROM alpine:latest
 
 RUN apk update && apk add git
 
-COPY --from=gobuild /go/bin/pbtype-server /go/bin/pbtype-server
+COPY --from=gobuild /go/bin/officehour-service /go/bin/officehour-service
 EXPOSE 8081
 
-ENTRYPOINT ["/go/bin/pbtype-server"]
+ENTRYPOINT ["/go/bin/officehour-service"]
