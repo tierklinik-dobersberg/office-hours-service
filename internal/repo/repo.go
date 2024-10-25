@@ -92,6 +92,26 @@ func (r *Repo) DeleteOfficeHour(ctx context.Context, name string) error {
 	return nil
 }
 
+func (r *Repo) FindByTime(ctx context.Context, t time.Time) ([]*office_hoursv1.OfficeHour, error) {
+	filter := bson.M{
+		"$or": bson.A{
+			bson.M{
+				"date": bson.M{
+					"$in": bson.A{
+						t.Format("01-02"),
+						t.Format("2006-01-02"),
+					},
+				},
+			},
+			bson.M{
+				"dayOfWeek": t.Weekday(),
+			},
+		},
+	}
+
+	return r.find(ctx, filter)
+}
+
 func (r *Repo) FindByDate(ctx context.Context, date *commonv1.Date) ([]*office_hoursv1.OfficeHour, error) {
 	return r.find(ctx, bson.M{
 		"date": bson.M{
