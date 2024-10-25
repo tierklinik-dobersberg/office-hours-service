@@ -13,6 +13,8 @@ import (
 	"github.com/tierklinik-dobersberg/apis/gen/go/tkd/office_hours/v1/office_hoursv1connect"
 	"github.com/tierklinik-dobersberg/apis/pkg/auth"
 	"github.com/tierklinik-dobersberg/apis/pkg/cors"
+	"github.com/tierklinik-dobersberg/apis/pkg/discovery"
+	"github.com/tierklinik-dobersberg/apis/pkg/discovery/consuldiscover"
 	"github.com/tierklinik-dobersberg/apis/pkg/log"
 	"github.com/tierklinik-dobersberg/apis/pkg/server"
 	"github.com/tierklinik-dobersberg/apis/pkg/validator"
@@ -28,6 +30,12 @@ func main() {
 	cfg, err := config.LoadConfig(ctx)
 	if err != nil {
 		slog.Error("failed to load configuration", slog.Any("error", err.Error()))
+		os.Exit(-1)
+	}
+
+	discover, err := consuldiscover.NewFromEnv()
+	if err != nil {
+		slog.Error("failed to create service discovery client", slog.Any("error", err.Error()))
 		os.Exit(-1)
 	}
 
@@ -87,6 +95,18 @@ func main() {
 	srv, err := server.CreateWithOptions(cfg.ListenAddress, loggingHandler(serveMux), server.WithCORS(corsConfig))
 	if err != nil {
 		slog.Error("failed to setup server", slog.Any("error", err.Error()))
+		os.Exit(-1)
+	}
+
+	// Enable service discovery
+	hostname, _ := os.Hostname()
+
+	if err := discover.Register(ctx, discovery.ServiceInstance{
+		Name:     "tkd.office_hours.v1.OfficeHourService",
+		Instance: hostname,
+		Address:  cfg.ListenAddress,
+	}); err != nil {
+		slog.Error("failed to register service and service catalog", slog.Any("error", err.Error()))
 		os.Exit(-1)
 	}
 
