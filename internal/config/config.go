@@ -15,11 +15,13 @@ import (
 )
 
 type Config struct {
-	IdmURL          string `env:"IDM_URL"`
-	EventsService   string `env:"EVENT_SERVICE"`
-	CalendarService string `env:"CALENDAR_SERVICE"`
-	MongoURL        string `env:"MONGO_URL,required"`
-	Database        string `env:"DATABASE,default=cis"`
+	AllowedOrigins  []string `env:"ALLOWED_ORIGINS,default=*"`
+	ListenAddress   string   `env:"LISTEN,default=:8081"`
+	IdmURL          string   `env:"IDM_URL"`
+	EventsService   string   `env:"EVENT_SERVICE"`
+	CalendarService string   `env:"CALENDAR_SERVICE"`
+	MongoURL        string   `env:"MONGO_URL,required"`
+	Database        string   `env:"DATABASE,default=cis"`
 }
 
 func LoadConfig(ctx context.Context) (*Config, error) {

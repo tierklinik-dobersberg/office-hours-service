@@ -22,9 +22,9 @@ type Service struct {
 	providers *config.Providers
 }
 
-func New(repo *repo.Repo, providers *config.Providers) *Service {
+func New(providers *config.Providers) *Service {
 	return &Service{
-		repo:      repo,
+		repo:      providers.Repo,
 		providers: providers,
 	}
 }
