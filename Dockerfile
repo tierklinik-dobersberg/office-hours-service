@@ -18,8 +18,6 @@ RUN CGO_ENABLED=0 go build -o /go/bin/officehour-service ./cmds/officehour-servi
 
 FROM alpine:latest
 
-RUN apk update && apk add git
-
 COPY --from=gobuild /go/bin/officehour-service /go/bin/officehour-service
 EXPOSE 8081
 
