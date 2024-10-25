@@ -6,8 +6,12 @@ import (
 
 	"github.com/sethvargo/go-envconfig"
 	"github.com/tierklinik-dobersberg/apis/gen/go/tkd/calendar/v1/calendarv1connect"
+	"github.com/tierklinik-dobersberg/apis/gen/go/tkd/events/v1/eventsv1connect"
 	"github.com/tierklinik-dobersberg/apis/gen/go/tkd/idm/v1/idmv1connect"
 	"github.com/tierklinik-dobersberg/apis/pkg/cli"
+	"github.com/tierklinik-dobersberg/office-hours-service/internal/repo"
+	"github.com/tierklinik-dobersberg/office-hours-service/internal/resolver"
+	"github.com/tierklinik-dobersberg/office-hours-service/internal/watcher"
 )
 
 type Config struct {
@@ -28,12 +32,34 @@ func LoadConfig(ctx context.Context) (*Config, error) {
 	return &cfg, nil
 }
 
-func (cfg *Config) ConfigureProviders() *Providers {
+func (cfg *Config) ConfigureProviders(ctx context.Context) (*Providers, error) {
 	hcli := cli.NewInsecureHttp2Client()
-	return &Providers{
-		Config:               cfg,
-		HolidayServiceClient: calendarv1connect.NewHolidayServiceClient(hcli, cfg.CalendarService),
-		UserServiceClient:    idmv1connect.NewUserServiceClient(hcli, cfg.IdmURL),
-		RoleServiceClient:    idmv1connect.NewRoleServiceClient(hcli, cfg.IdmURL),
+
+	repo, err := repo.NewRepo(ctx, cfg.MongoURL, cfg.Database)
+	if err != nil {
+		return nil, err
 	}
+
+	resolver := resolver.NewResolver(repo, calendarv1connect.NewHolidayServiceClient(hcli, cfg.CalendarService))
+
+	var w *watcher.Watcher
+	if cfg.EventsService != "" {
+		w = watcher.New(
+			resolver,
+			eventsv1connect.NewEventServiceClient(hcli, cfg.EventsService),
+		)
+
+		// Immediately start the watcher
+		w.Start(ctx)
+	}
+
+	return &Providers{
+		Config:   cfg,
+		Repo:     repo,
+		Resolver: resolver,
+		Watcher:  w,
+
+		UserServiceClient: idmv1connect.NewUserServiceClient(hcli, cfg.IdmURL),
+		RoleServiceClient: idmv1connect.NewRoleServiceClient(hcli, cfg.IdmURL),
+	}, nil
 }
