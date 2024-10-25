@@ -101,7 +101,7 @@ func main() {
 	// Enable service discovery
 	hostname, _ := os.Hostname()
 
-	if err := discover.Register(ctx, discovery.ServiceInstance{
+	if err := discovery.Register(ctx, discover, discovery.ServiceInstance{
 		Name:     "tkd.office_hours.v1.OfficeHourService",
 		Instance: hostname,
 		Address:  cfg.ListenAddress,
