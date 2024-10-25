@@ -14,7 +14,7 @@ RUN go mod verify
 
 COPY ./ ./
 
-RUN CGO_ENABLED=0 go build -o /go/bin/pbtype-server ./cmds/officehour-service
+RUN CGO_ENABLED=0 go build -o /go/bin/officehour-service ./cmds/officehour-service
 
 FROM alpine:latest
 
