@@ -100,7 +100,7 @@ func main() {
 	}
 
 	// Enable service discovery
-	if err := discovery.Register(ctx, discover, discovery.ServiceInstance{
+	if err := discovery.Register(ctx, discover, &discovery.ServiceInstance{
 		Name:    wellknown.OfficeHourV1ServiceScope,
 		Address: cfg.ListenAddress,
 	}); err != nil {
