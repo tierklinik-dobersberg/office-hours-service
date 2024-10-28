@@ -9,7 +9,6 @@ import (
 
 	connect "github.com/bufbuild/connect-go"
 	"github.com/bufbuild/protovalidate-go"
-	"github.com/tierklinik-dobersberg/apis/gen/go/tkd/idm/v1/idmv1connect"
 	"github.com/tierklinik-dobersberg/apis/gen/go/tkd/office_hours/v1/office_hoursv1connect"
 	"github.com/tierklinik-dobersberg/apis/pkg/auth"
 	"github.com/tierklinik-dobersberg/apis/pkg/cors"
@@ -34,7 +33,7 @@ func main() {
 		os.Exit(-1)
 	}
 
-	discover, err := consuldiscover.NewFromEnv()
+	catalog, err := consuldiscover.NewFromEnv()
 	if err != nil {
 		slog.Error("failed to create service discovery client", slog.Any("error", err.Error()))
 		os.Exit(-1)
@@ -52,9 +51,7 @@ func main() {
 		validator.NewInterceptor(protoValidator),
 	)
 
-	if cfg.IdmURL != "" {
-		roleClient := idmv1connect.NewRoleServiceClient(http.DefaultClient, cfg.IdmURL)
-
+	if roleClient, err := wellknown.RoleService.Create(ctx, catalog); err == nil {
 		authInterceptor := auth.NewAuthAnnotationInterceptor(
 			protoregistry.GlobalFiles,
 			auth.NewIDMRoleResolver(roleClient),
@@ -69,7 +66,7 @@ func main() {
 		AllowCredentials: true,
 	}
 
-	providers, err := cfg.ConfigureProviders(ctx)
+	providers, err := cfg.ConfigureProviders(ctx, catalog)
 	if err != nil {
 		slog.Error("failed to configure providers", slog.Any("error", err.Error()))
 		os.Exit(-1)
@@ -100,7 +97,7 @@ func main() {
 	}
 
 	// Enable service discovery
-	if err := discovery.Register(ctx, discover, &discovery.ServiceInstance{
+	if err := discovery.Register(ctx, catalog, &discovery.ServiceInstance{
 		Name:    wellknown.OfficeHourV1ServiceScope,
 		Address: cfg.ListenAddress,
 	}); err != nil {

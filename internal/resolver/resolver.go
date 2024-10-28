@@ -8,20 +8,21 @@ import (
 
 	"github.com/bufbuild/connect-go"
 	calendarv1 "github.com/tierklinik-dobersberg/apis/gen/go/tkd/calendar/v1"
-	"github.com/tierklinik-dobersberg/apis/gen/go/tkd/calendar/v1/calendarv1connect"
 	v1 "github.com/tierklinik-dobersberg/apis/gen/go/tkd/office_hours/v1"
+	"github.com/tierklinik-dobersberg/apis/pkg/discovery"
+	"github.com/tierklinik-dobersberg/apis/pkg/discovery/wellknown"
 	"github.com/tierklinik-dobersberg/office-hours-service/internal/repo"
 )
 
 type Resolver struct {
-	repo          *repo.Repo
-	holidayClient calendarv1connect.HolidayServiceClient
+	repo    *repo.Repo
+	catalog discovery.Discoverer
 }
 
-func NewResolver(repo *repo.Repo, cli calendarv1connect.HolidayServiceClient) *Resolver {
+func NewResolver(repo *repo.Repo, catalog discovery.Discoverer) *Resolver {
 	return &Resolver{
-		repo:          repo,
-		holidayClient: cli,
+		repo:    repo,
+		catalog: catalog,
 	}
 }
 
@@ -60,7 +61,12 @@ func (r *Resolver) ResolveOfficeHours(ctx context.Context, t time.Time) ([]*v1.O
 }
 
 func (r *Resolver) isHoliday(ctx context.Context, t time.Time) (bool, error) {
-	holidayResponse, err := r.holidayClient.GetHoliday(ctx, connect.NewRequest(&calendarv1.GetHolidayRequest{
+	holidayClient, err := wellknown.HolidayService.Create(ctx, r.catalog)
+	if err != nil {
+		return false, fmt.Errorf("failed to get holiday client using service catalog: %w", err)
+	}
+
+	holidayResponse, err := holidayClient.GetHoliday(ctx, connect.NewRequest(&calendarv1.GetHolidayRequest{
 		Year:  uint64(t.Year()),
 		Month: uint64(t.Month()),
 	}))
