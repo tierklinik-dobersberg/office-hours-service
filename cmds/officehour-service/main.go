@@ -15,6 +15,7 @@ import (
 	"github.com/tierklinik-dobersberg/apis/pkg/cors"
 	"github.com/tierklinik-dobersberg/apis/pkg/discovery"
 	"github.com/tierklinik-dobersberg/apis/pkg/discovery/consuldiscover"
+	"github.com/tierklinik-dobersberg/apis/pkg/discovery/wellknown"
 	"github.com/tierklinik-dobersberg/apis/pkg/log"
 	"github.com/tierklinik-dobersberg/apis/pkg/server"
 	"github.com/tierklinik-dobersberg/apis/pkg/validator"
@@ -99,12 +100,9 @@ func main() {
 	}
 
 	// Enable service discovery
-	hostname, _ := os.Hostname()
-
 	if err := discovery.Register(ctx, discover, discovery.ServiceInstance{
-		Name:     "tkd.office_hours.v1.OfficeHourService",
-		Instance: hostname,
-		Address:  cfg.ListenAddress,
+		Name:    wellknown.OfficeHourV1ServiceScope,
+		Address: cfg.ListenAddress,
 	}); err != nil {
 		slog.Error("failed to register service and service catalog", slog.Any("error", err.Error()))
 		os.Exit(-1)
